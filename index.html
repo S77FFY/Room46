@@ -143,6 +143,42 @@
   #room{width:100%;max-width:430px;display:none;flex-direction:column;}
   #room.active{display:flex;}
 
+  /* --- step counter bar --- */
+  .step-bar{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:14px;
+    padding:8px 14px;
+    background:linear-gradient(160deg,#241c14,#15100b);
+    border:1px solid var(--brass);border-radius:10px;
+    font-size:.8rem;letter-spacing:.12em;
+  }
+  .step-phase{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1rem;font-weight:600;
+    color:var(--brass-bright);flex:1;
+  }
+  .step-count{
+    color:var(--parchment);letter-spacing:.1em;
+  }
+  .step-reset{
+    font-family:'Spectral',serif;font-size:.68rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--parchment);
+    background:transparent;border:1px solid var(--brass);
+    border-radius:6px;padding:4px 10px;cursor:pointer;
+  }
+  .step-reset:hover{border-color:var(--brass-bright);color:var(--brass-bright);}
+  /* --- completion banner --- */
+  .step-complete{
+    margin-bottom:14px;
+    padding:14px 16px;
+    background:linear-gradient(160deg,#2a2010,#1a1508);
+    border:2px solid var(--brass-bright);border-radius:10px;
+    display:flex;align-items:center;gap:12px;
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.05rem;color:var(--parchment);
+  }
+  .step-complete-icon{font-size:1.4rem;color:var(--brass-bright);}
+
   /* --- the room illustration: fixed area, always same place --- */
   .embed-wrap{
     position:relative;
@@ -313,6 +349,19 @@
       </span>
     </div>
 
+    <!-- step counter bar -->
+    <div class="step-bar" id="stepBar">
+      <span class="step-phase" id="stepPhase">Outward</span>
+      <span class="step-count" id="stepCount">0 steps</span>
+      <button class="step-reset" id="stepReset">Reset</button>
+    </div>
+    <!-- completion banner (hidden until done) -->
+    <div class="step-complete" id="stepComplete" style="display:none;">
+      <span class="step-complete-icon">⚑</span>
+      <span id="stepCompleteMsg"></span>
+      <button class="step-reset" id="stepReset2">Play again</button>
+    </div>
+
     <div class="embed-wrap">
       <div class="embed-toolbar">
         <a id="openOriginal" target="_blank" rel="noopener">Read text ↗</a>
@@ -350,7 +399,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.1.3";
+const APP_VERSION = "1.1.5";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -415,8 +464,8 @@ ROOMS[20].doors = [5, 27, 1];
 ROOMS[21].doors = [44, 24, 31];
 ROOMS[22].doors = [43, 38];
 ROOMS[23].doors = [28, 8, 45, 19];
-ROOMS[24].doors = [1];                      // restart = back to room 1
-ROOMS[24].note  = "This is a dead end — the only way is back to the start.";
+ROOMS[24].doors = [];                       // true dead end — must restart from room 1
+ROOMS[24].note  = "Dead end. You must start again from Room 1.";
 ROOMS[25].doors = [34, 13, 35];
 ROOMS[26].doors = [30, 36, 38, 1];
 ROOMS[27].doors = [13, 9];
@@ -528,20 +577,83 @@ function renderRoom(key){
   if (isNum){
     prev.style.visibility = num > 1 ? 'visible' : 'hidden';
     next.style.visibility = num < 45 ? 'visible' : 'hidden';
-    prev.onclick = () => navigate(num - 1);
-    next.onclick = () => navigate(num + 1);
+    prev.onclick = () => navigate(num - 1, false);
+    next.onclick = () => navigate(num + 1, false);
   } else {
     prev.style.visibility = 'hidden';
     next.style.visibility = 'hidden';
   }
 }
 
-function navigate(key){
+/* ---------- step counter ---------- */
+const SOLUTION = [1,26,30,42,4,29,17,45,23,8,12,39,4,15,37,20,1]; // 16-step solution for reference
+let stepState = {
+  steps: 0,          // total steps taken via doors
+  outSteps: 0,       // steps on outward leg
+  reached45: false,  // have we arrived at 45?
+  done: false,       // full round trip complete?
+  lastRoom: 1,       // room we came from (to detect door navigation vs browse)
+  counting: false,   // only count once a door is used from room 1
+};
+
+function resetSteps(){
+  stepState = { steps:0, outSteps:0, reached45:false, done:false, lastRoom:1, counting:false };
+  document.getElementById('stepComplete').style.display = 'none';
+  document.getElementById('stepBar').style.display = 'flex';
+  updateStepBar();
+}
+
+function updateStepBar(){
+  const phase = stepState.reached45 ? 'Return' : 'Outward';
+  const s = stepState.steps;
+  document.getElementById('stepPhase').textContent = phase;
+  document.getElementById('stepCount').textContent = s + (s === 1 ? ' step' : ' steps');
+}
+
+function navigate(key, viaDoor){
   key = String(key);
   if (key === '' || key === 'home'){ show('home'); return; }
+
+  const num = parseInt(key, 10);
+
+  // Start counting the moment the player uses a door from room 1
+  if (viaDoor && stepState.lastRoom === 1 && !stepState.done){
+    stepState.counting = true;
+  }
+
+  // Count this step if it was via a door tap (not prev/next browse)
+  if (viaDoor && stepState.counting && !stepState.done){
+    stepState.steps++;
+
+    // Arrived at 45 for the first time
+    if (num === 45 && !stepState.reached45){
+      stepState.reached45 = true;
+      stepState.outSteps = stepState.steps;
+    }
+
+    // Arrived back at 1 after reaching 45
+    if (num === 1 && stepState.reached45 && !stepState.done){
+      stepState.done = true;
+      const total = stepState.steps;
+      const back  = total - stepState.outSteps;
+      const msg   = `Done! ${stepState.outSteps} steps to Room 45, ${back} back — ${total} total.` +
+                    (total === 16 ? ' Perfect — the shortest route!' : '');
+      document.getElementById('stepCompleteMsg').textContent = msg;
+      document.getElementById('stepComplete').style.display = 'flex';
+      document.getElementById('stepBar').style.display = 'none';
+    }
+
+    updateStepBar();
+  }
+
+  stepState.lastRoom = num || 0;
+
   show('room');
   renderRoom(key);
 }
+
+document.getElementById('stepReset').addEventListener('click', resetSteps);
+document.getElementById('stepReset2').addEventListener('click', () => { resetSteps(); navigate('1'); });
 
 /* ---------- build home grid ---------- */
 (function buildGrid(){
@@ -561,9 +673,12 @@ document.addEventListener('click', (e) => {
   const t = e.target.closest('[data-nav]');
   if (!t) return;
   e.preventDefault();
-  navigate(t.getAttribute('data-nav'));
+  // viaDoor = true only when clicking an actual door box (not map/home links)
+  const isDoor = t.classList.contains('door');
+  navigate(t.getAttribute('data-nav'), isDoor);
 });
 
+updateStepBar();
 navigate('home');
 </script>
 </body>
