@@ -350,7 +350,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.1.2";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -406,7 +406,38 @@ ROOMS[11].doors = [40, 24];
 ROOMS[12].doors = [2, 21, 8, 39];           // 39 = ladder/trapdoor down
 ROOMS[13].doors = [27, 18, 25];
 ROOMS[14].doors = [10, 43, 24];
+ROOMS[15].doors = [30, 37, 3];
+ROOMS[16].doors = [36, 7];
+ROOMS[17].doors = [6, 45, 33];
+ROOMS[18].doors = [13, 3];
+ROOMS[19].doors = [31, 11];
+ROOMS[20].doors = [5, 27, 1];
+ROOMS[21].doors = [44, 24, 31];
+ROOMS[22].doors = [43, 38];
+ROOMS[23].doors = [28, 8, 45, 19];
+ROOMS[24].doors = [1];                      // restart = back to room 1
+ROOMS[24].note  = "This is a dead end — the only way is back to the start.";
+ROOMS[25].doors = [34, 13, 35];
 ROOMS[26].doors = [30, 36, 38, 1];
+ROOMS[27].doors = [13, 9];
+ROOMS[28].doors = [23, 43, 45, 32];
+ROOMS[29].doors = [8, 40, 35, 2];
+ROOMS[30].doors = [42, 34, 5, 15];
+ROOMS[31].doors = [44, 19, 21];
+ROOMS[32].doors = [11, 6, 16, 28];
+ROOMS[33].doors = [3, 35, 7];
+ROOMS[34].doors = [10, 25];
+ROOMS[35].doors = [33];
+ROOMS[36].doors = [7, 16];
+ROOMS[37].doors = [15, 10, 42, 20];
+ROOMS[38].doors = [40, 22, 43];
+ROOMS[39].doors = [11, 4, 12];
+ROOMS[40].doors = [11, 6, 38];
+ROOMS[41].doors = [1, 10, 35, 38];
+ROOMS[42].doors = [22, 30, 4, 25, 37];
+ROOMS[43].doors = [22, 38];
+ROOMS[44].doors = [21, 18];
+ROOMS[45].doors = [28, 17, 36, 19, 23];
 
 /* ---------- routing ---------- */
 const home = document.getElementById('home');
