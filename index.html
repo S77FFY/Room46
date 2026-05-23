@@ -143,34 +143,17 @@
   #room{width:100%;max-width:430px;display:none;flex-direction:column;}
   #room.active{display:flex;}
 
-  .phone{
-    background:#0a0a0c;
-    border:11px solid #1c1c20;
-    border-radius:46px;
-    padding:14px 12px 18px;
-    box-shadow:0 22px 55px rgba(0,0,0,.6), inset 0 0 0 2px #000;
-    position:relative;
-  }
-  .notch{
-    position:absolute;top:14px;left:50%;transform:translateX(-50%);
-    width:128px;height:24px;background:#000;border-radius:0 0 16px 16px;z-index:5;
-  }
-  .screen{
-    background:var(--parchment);
-    color:var(--ink);
-    border-radius:34px;
-    overflow:hidden;
-    display:flex;flex-direction:column;
-    height:74vh;min-height:560px;
-  }
-
-  /* --- top: the room illustration (hotlinked from source) --- */
+  /* --- the room illustration: fixed area, always same place --- */
   .embed-wrap{
     position:relative;
-    flex:1 1 auto;
-    background:#cbbfa6;
+    width:100%;
+    height:58vh;min-height:380px;max-height:620px;
+    background:#e8dfce;
     overflow:hidden;
     display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--brass);
+    border-radius:12px;
+    box-shadow:0 12px 30px var(--shadow);
   }
   .room-illustration{
     width:100%;height:100%;
@@ -193,14 +176,15 @@
     padding:5px 9px;border-radius:6px;text-decoration:none;
   }
 
-  /* --- middle: the door boxes --- */
+  /* --- the door boxes (with a gap above) --- */
   .doors{
     flex:0 0 auto;
     display:flex;flex-wrap:wrap;gap:8px;
+    margin-top:22px;
     padding:11px 12px;
     background:linear-gradient(180deg,#2a2018,#1c150f);
-    border-top:2px solid var(--brass);
-    border-bottom:2px solid var(--brass);
+    border:2px solid var(--brass);
+    border-radius:12px;
   }
   .door{
     flex:1 1 0;
@@ -230,12 +214,13 @@
 
   /* --- bottom: caption / your notes --- */
   .caption{
-    flex:0 0 auto;
     background:var(--parchment-dim);
     color:var(--ink);
-    padding:10px 14px 13px;
+    margin-top:14px;
+    padding:12px 16px 14px;
     font-size:.84rem;line-height:1.45;
-    max-height:26%;overflow:auto;
+    border-radius:10px;
+    border:1px solid var(--brass);
   }
   .caption .cap-room{
     font-family:'Cormorant Garamond',serif;font-weight:600;
@@ -320,26 +305,19 @@
       </span>
     </div>
 
-    <div class="phone">
-      <div class="notch"></div>
-      <div class="screen">
-
-        <div class="embed-wrap">
-          <div class="embed-toolbar">
-            <a id="openOriginal" target="_blank" rel="noopener">Read text ↗</a>
-          </div>
-          <img id="roomImg" class="room-illustration" alt="Room illustration" loading="lazy">
-          <div id="imgPlaceholder" class="img-placeholder"></div>
-        </div>
-
-        <div class="doors" id="doors"><!-- filled by JS --></div>
-
-        <div class="caption">
-          <div class="cap-room" id="capRoom">Room</div>
-          <div class="cap-text" id="capText"></div>
-        </div>
-
+    <div class="embed-wrap">
+      <div class="embed-toolbar">
+        <a id="openOriginal" target="_blank" rel="noopener">Read text ↗</a>
       </div>
+      <img id="roomImg" class="room-illustration" alt="Room illustration" loading="lazy">
+      <div id="imgPlaceholder" class="img-placeholder"></div>
+    </div>
+
+    <div class="doors" id="doors"><!-- filled by JS --></div>
+
+    <div class="caption">
+      <div class="cap-room" id="capRoom">Room</div>
+      <div class="cap-text" id="capText"></div>
     </div>
 
     <div class="room-nav">
@@ -364,7 +342,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.0.9";
+const APP_VERSION = "1.1.0";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -489,7 +467,7 @@ function renderRoom(key){
       cell.innerHTML =
         '<span class="door-icon">⌖</span>' +
         '<span class="door-num">' + (d == null ? '?' : d) + '</span>' +
-        '<span class="door-label">' + (d == null ? 'door ' + (idx+1) : 'page ' + d) + '</span>';
+        (d == null ? '<span class="door-label">door ' + (idx+1) + '</span>' : '');
       doorsEl.appendChild(cell);
     });
     document.getElementById('doorHint').textContent =
