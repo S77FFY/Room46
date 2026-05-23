@@ -178,17 +178,25 @@
 
   /* --- the door boxes (with a gap above) --- */
   .doors{
-    flex:0 0 auto;
-    display:flex;flex-wrap:wrap;gap:8px;
+    display:grid;
+    gap:8px;
     margin-top:22px;
     padding:11px 12px;
     background:linear-gradient(180deg,#2a2018,#1c150f);
     border:2px solid var(--brass);
     border-radius:12px;
+    /* default: all on one row */
+    grid-template-columns: repeat(var(--door-cols, 4), 1fr);
   }
+  /* snap to 3 columns for 6 or 7 doors */
+  .doors.grid-3{ --door-cols: 3; }
+  /* 2 columns for exactly 4 doors */
+  .doors.grid-2{ --door-cols: 2; }
+  /* specific counts as one row */
+  .doors.grid-1{ --door-cols: 1; }
+  .doors.grid-4{ --door-cols: 4; }
+  .doors.grid-5{ --door-cols: 5; }
   .door{
-    flex:1 1 0;
-    min-width:60px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:5px;
     background:linear-gradient(165deg,#3a2c1c,#241a10);
@@ -342,7 +350,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -391,7 +399,7 @@ ROOMS[4].doors = [44, 29, 15, 11, 16, 24, 43];
 ROOMS[5].doors = [43, 22, 30, 20];
 ROOMS[6].doors = [40];
 ROOMS[7].doors = [33, 36, 16];
-ROOMS[8].doors = [31, 6, 29, 12, 5];
+ROOMS[8].doors = [31, 6, 29, 12];
 ROOMS[9].doors = [3, 18];
 ROOMS[10].doors = [34, 41, 14];
 ROOMS[11].doors = [40, 24];
@@ -455,10 +463,19 @@ function renderRoom(key){
   // doors
   const doorsEl = document.getElementById('doors');
   doorsEl.innerHTML = '';
+  // reset grid classes
+  doorsEl.className = 'doors';
   const doors = (isNum && ROOMS[num]) ? ROOMS[num].doors : [];
   if (doors.length === 0){
     document.getElementById('doorHint').textContent = '';
   } else {
+    // pick grid columns: 6-7 doors -> 3 cols (3x2); 4 -> 2 cols; everything else -> one row
+    const n = doors.length;
+    if (n === 6 || n === 7) doorsEl.classList.add('grid-3');
+    else if (n === 4)       doorsEl.classList.add('grid-2');
+    else if (n === 1)       doorsEl.classList.add('grid-1');
+    else if (n === 5)       doorsEl.classList.add('grid-5');
+    else                    doorsEl.classList.add('grid-' + n);
     let filled = 0;
     doors.forEach((d, idx) => {
       const cell = document.createElement(d == null ? 'div' : 'a');
