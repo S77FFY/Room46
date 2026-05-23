@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAZE — Navigator</title>
+<style>
+  /* ============================================================
+     MAZE Navigator  —  version scheme in JS (APP_VERSION)
+     A companion for Christopher Manson's MAZE (1985).
+     All room art is hotlinked live from inventwithpython.com;
+     nothing from the book is copied into this file. The story text
+     stays on the original site, one tap away via "Read text".
+     ============================================================ */
+
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Spectral:wght@300;400;600&display=swap');
+
+  :root{
+    --ink:#1c1714;
+    --parchment:#e8dfce;
+    --parchment-dim:#d4c8b0;
+    --brass:#9a7b3f;
+    --brass-bright:#caa75a;
+    --shadow:rgba(20,14,8,.55);
+    --door:#2a2018;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  body{
+    font-family:'Spectral',serif;
+    background:
+      radial-gradient(circle at 50% 0%, #2c2419 0%, #181310 60%, #0d0a07 100%);
+    color:var(--parchment);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:24px 12px 60px;
+  }
+
+  /* ---------- shared chrome ---------- */
+  .topbar{
+    width:100%;max-width:430px;
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:18px;
+  }
+  .wordmark{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;letter-spacing:.42em;
+    font-size:1.5rem;color:var(--brass-bright);
+    text-indent:.42em;
+  }
+  .version{
+    font-size:.72rem;letter-spacing:.18em;
+    color:var(--brass);text-transform:uppercase;
+  }
+
+  /* =========================================================
+     HOME
+     ========================================================= */
+  #home{width:100%;max-width:430px;display:none;flex-direction:column;}
+  #home.active{display:flex;}
+
+  .hero{
+    text-align:center;
+    border:1px solid var(--brass);
+    border-radius:14px;
+    padding:34px 22px 30px;
+    margin-bottom:26px;
+    background:
+      linear-gradient(180deg, rgba(154,123,63,.10), rgba(0,0,0,.18));
+    box-shadow:0 18px 40px var(--shadow), inset 0 0 60px rgba(0,0,0,.4);
+  }
+  .hero h1{
+    font-family:'Cormorant Garamond',serif;
+    font-size:3.4rem;font-weight:600;letter-spacing:.3em;
+    text-indent:.3em;line-height:1;color:var(--parchment);
+    text-shadow:0 2px 0 #000,0 0 22px rgba(202,167,90,.35);
+  }
+  .hero .sub{
+    font-style:italic;color:var(--parchment-dim);
+    margin-top:14px;font-size:1.02rem;
+  }
+  .hero .vtag{
+    display:inline-block;margin-top:20px;
+    font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--brass-bright);
+    border:1px solid var(--brass);border-radius:30px;
+    padding:5px 16px;
+  }
+
+  .section-label{
+    font-family:'Cormorant Garamond',serif;
+    letter-spacing:.32em;text-transform:uppercase;
+    font-size:.8rem;color:var(--brass);
+    text-align:center;margin:6px 0 16px;
+  }
+
+  .special-row{display:flex;gap:10px;margin-bottom:18px;}
+  .special-row a{flex:1;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:9px;
+  }
+  a[data-nav]{cursor:pointer;}
+  .tile{
+    aspect-ratio:1;
+    display:flex;align-items:center;justify-content:center;
+    text-decoration:none;
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.25rem;font-weight:600;
+    color:var(--parchment);
+    background:linear-gradient(160deg,#241c14,#15100b);
+    border:1px solid #3a2e1f;
+    border-radius:9px;
+    transition:transform .14s ease, border-color .2s, color .2s, box-shadow .2s;
+  }
+  .tile:hover{
+    transform:translateY(-3px);
+    border-color:var(--brass-bright);
+    color:var(--brass-bright);
+    box-shadow:0 8px 18px var(--shadow);
+  }
+  .tile.pill{
+    aspect-ratio:auto;padding:13px 0;font-size:.82rem;
+    letter-spacing:.2em;text-transform:uppercase;
+    font-family:'Spectral',serif;font-weight:600;
+  }
+  /* room 1 and 45 = start & goal, gently highlighted */
+  .tile[data-special]{border-color:var(--brass);color:var(--brass-bright);}
+
+  .home-note{
+    margin-top:26px;font-size:.82rem;line-height:1.55;
+    color:var(--parchment-dim);font-style:italic;text-align:center;
+  }
+
+  /* =========================================================
+     ROOM  (iPhone frame)
+     ========================================================= */
+  #room{width:100%;max-width:430px;display:none;flex-direction:column;}
+  #room.active{display:flex;}
+
+  .phone{
+    background:#0a0a0c;
+    border:11px solid #1c1c20;
+    border-radius:46px;
+    padding:14px 12px 18px;
+    box-shadow:0 22px 55px rgba(0,0,0,.6), inset 0 0 0 2px #000;
+    position:relative;
+  }
+  .notch{
+    position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    width:128px;height:24px;background:#000;border-radius:0 0 16px 16px;z-index:5;
+  }
+  .screen{
+    background:var(--parchment);
+    color:var(--ink);
+    border-radius:34px;
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    height:74vh;min-height:560px;
+  }
+
+  /* --- top: the room illustration (hotlinked from source) --- */
+  .embed-wrap{
+    position:relative;
+    flex:1 1 auto;
+    background:#cbbfa6;
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .room-illustration{
+    width:100%;height:100%;
+    object-fit:contain;
+    display:block;background:#e8dfce;
+  }
+  .img-placeholder{
+    position:absolute;inset:0;display:none;
+    flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;text-align:center;padding:24px;
+    color:#5c4720;font-size:.9rem;line-height:1.5;background:#e8dfce;
+  }
+  .img-placeholder a{color:#7a5c1f;font-weight:600;}
+  .embed-toolbar{
+    position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:6px;
+  }
+  .embed-toolbar a{
+    font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+    background:rgba(20,14,8,.78);color:var(--parchment);
+    padding:5px 9px;border-radius:6px;text-decoration:none;
+  }
+
+  /* --- middle: the door boxes --- */
+  .doors{
+    flex:0 0 auto;
+    display:flex;flex-wrap:wrap;gap:8px;
+    padding:11px 12px;
+    background:linear-gradient(180deg,#2a2018,#1c150f);
+    border-top:2px solid var(--brass);
+    border-bottom:2px solid var(--brass);
+  }
+  .door{
+    flex:1 1 0;
+    min-width:60px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:5px;
+    background:linear-gradient(165deg,#3a2c1c,#241a10);
+    border:1px solid var(--brass);
+    border-radius:10px;
+    padding:9px 4px 8px;
+    min-height:64px;
+    text-decoration:none;
+    transition:transform .12s, box-shadow .2s, border-color .2s;
+  }
+  .door:hover{transform:translateY(-2px);border-color:var(--brass-bright);box-shadow:0 6px 14px rgba(0,0,0,.5);}
+  .door .door-icon{font-size:.95rem;color:var(--brass-bright);}
+  .door .door-num{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.55rem;font-weight:600;color:var(--parchment);line-height:1;
+  }
+  .door .door-label{
+    font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--parchment-dim);
+  }
+  .door.empty{opacity:.55;border-style:dashed;}
+  .door.empty .door-num{color:var(--brass);font-size:1.15rem;}
+
+  /* --- bottom: caption / your notes --- */
+  .caption{
+    flex:0 0 auto;
+    background:var(--parchment-dim);
+    color:var(--ink);
+    padding:10px 14px 13px;
+    font-size:.84rem;line-height:1.45;
+    max-height:26%;overflow:auto;
+  }
+  .caption .cap-room{
+    font-family:'Cormorant Garamond',serif;font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;font-size:.72rem;
+    color:#5c4720;margin-bottom:4px;
+  }
+  .caption .cap-text:empty::before{
+    content:"Your notes / clue for this room — edit in the data block.";
+    font-style:italic;color:#6b5a3e;
+  }
+
+  /* --- room nav under the phone --- */
+  .room-nav{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:16px;gap:8px;
+  }
+  .room-nav a, .room-nav button{
+    font-family:'Spectral',serif;font-size:.78rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--parchment);
+    background:linear-gradient(160deg,#241c14,#15100b);
+    border:1px solid var(--brass);border-radius:8px;
+    padding:9px 14px;text-decoration:none;cursor:pointer;
+  }
+  .room-nav a:hover,.room-nav button:hover{border-color:var(--brass-bright);color:var(--brass-bright);}
+  .room-title{
+    font-family:'Cormorant Garamond',serif;font-size:1.3rem;
+    letter-spacing:.16em;color:var(--brass-bright);
+  }
+
+  .footer{
+    margin-top:34px;font-size:.7rem;letter-spacing:.1em;
+    color:#6b5d44;text-align:center;line-height:1.6;max-width:430px;
+  }
+  .footer a{color:var(--brass);}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <span class="wordmark">MAZE</span>
+    <span class="version" id="versionTag"></span>
+  </div>
+
+  <!-- ===================== HOME ===================== -->
+  <main id="home">
+    <div class="hero">
+      <h1>MAZE</h1>
+      <div class="sub">A solver's companion to the building<br>in the shape of a book.</div>
+      <span class="vtag" id="heroVersion"></span>
+    </div>
+
+    <div class="section-label">Begin Here</div>
+    <div class="special-row">
+      <a class="tile pill" data-nav="directions">Directions</a>
+      <a class="tile pill" data-nav="prologue">Prologue</a>
+    </div>
+
+    <div class="section-label">The Forty-Five Rooms</div>
+    <div class="grid" id="roomGrid"></div>
+
+    <p class="home-note">
+      Start in Room&nbsp;1, find your way to Room&nbsp;45, then back again —
+      sixteen steps if you read the clues. Each room below opens the original
+      page; fill the three doors with the page numbers they lead to as you decipher them.
+    </p>
+  </main>
+
+  <!-- ===================== ROOM ===================== -->
+  <main id="room">
+    <div class="room-nav" style="margin-top:0;margin-bottom:16px;">
+      <a data-nav="home">← Map</a>
+      <span class="room-title" id="roomTitle">Room</span>
+      <button id="prevRoom">Prev</button>
+    </div>
+
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+
+        <div class="embed-wrap">
+          <div class="embed-toolbar">
+            <a id="openOriginal" target="_blank" rel="noopener">Read text ↗</a>
+          </div>
+          <img id="roomImg" class="room-illustration" alt="Room illustration" loading="lazy">
+          <div id="imgPlaceholder" class="img-placeholder"></div>
+        </div>
+
+        <div class="doors" id="doors"><!-- filled by JS --></div>
+
+        <div class="caption">
+          <div class="cap-room" id="capRoom">Room</div>
+          <div class="cap-text" id="capText"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="room-nav">
+      <a data-nav="home">All Rooms</a>
+      <span style="font-size:.72rem;letter-spacing:.12em;color:var(--brass);" id="doorHint"></span>
+      <button id="nextRoom">Next</button>
+    </div>
+  </main>
+
+  <p class="footer">
+    Companion tool for <em>Maze</em> by Christopher Manson (1985).
+    Page art and text are loaded live from
+    <a href="https://inventwithpython.com/mazewebsite/directions.html" target="_blank" rel="noopener">inventwithpython.com</a>
+    and remain the property of their copyright holder.
+  </p>
+
+<script>
+/* =========================================================
+   VERSION
+   Scheme: vMAJOR.MINOR.PATCH  (start 1.0.0)
+   - PATCH increments by 1 on each edit, up to 9
+   - at .9 -> next edit rolls MINOR up by 1, PATCH back to 0
+   - MAJOR reserved for manual major / release bumps
+   Bump PATCH/MINOR here by hand as you revise the file.
+   ========================================================= */
+const APP_VERSION = "1.0.6";
+
+document.getElementById('versionTag').textContent = "v" + APP_VERSION;
+document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
+
+/* =========================================================
+   ROOM DATA
+   For each room, fill `doors` with the page numbers its doors
+   lead to (read them off the illustration). Use null for an
+   unknown / not-yet-deciphered door. Add or remove entries to
+   show 2, 3, or 4 doors. `note` is your own clue/observation
+   (safe to write — it's your text, not the book's).
+   Room 1's doors are given in the Directions: 20, 26, 41, 21.
+   ========================================================= */
+const BASE = "https://inventwithpython.com/mazewebsite/";
+
+const ROOMS = {};
+for (let i = 1; i <= 45; i++){
+  ROOMS[i] = { doors: [null, null, null], note: "" };
+}
+// Your own redrawn images. When hosted on GitHub Pages alongside index.html,
+// relative filenames load directly (same domain — no sandbox/popup issues).
+// Any room without an `img` falls back to the original illustration.
+const GH = "";  // same folder as index.html
+// Door numbers read from the room illustrations (the page numbers each door leads to):
+ROOMS[1].doors = [20, 26, 41, 21];          // STORY, FABLE, TALE, YARN
+ROOMS[1].img   = GH + "IMG_4068.jpeg";
+ROOMS[2].doors = [29, 22, 12];
+ROOMS[2].img   = GH + "IMG_4069.jpeg";
+ROOMS[3].doors = [33, 9, 18];               // mirror-reversed room; centre door "NINE" = 9
+ROOMS[3].img   = GH + "IMG_4070.jpeg";
+ROOMS[4].doors = [44, 29, 15, 11, 16, 24, 43];
+ROOMS[4].img   = GH + "IMG_4071.jpeg";
+ROOMS[5].doors = [43, 22, 30, 20];
+ROOMS[5].img   = GH + "IMG_4072.jpeg";
+
+/* ---------- routing ---------- */
+const home = document.getElementById('home');
+const room = document.getElementById('room');
+
+function show(view){
+  home.classList.toggle('active', view === 'home');
+  room.classList.toggle('active', view === 'room');
+  window.scrollTo(0,0);
+}
+
+function pageURL(key){
+  if (key === 'directions') return BASE + "directions.html";
+  if (key === 'prologue')   return BASE + "prologue.html";
+  return BASE + "room" + key + ".html";
+}
+function imageURL(key){
+  if (key === 'directions') return BASE + "images/directions.jpg";
+  if (key === 'prologue')   return BASE + "images/prologue.jpg";
+  return BASE + "images/room" + key + ".jpg";
+}
+
+function renderRoom(key){
+  const isNum = /^\d+$/.test(key);
+  const num = isNum ? parseInt(key,10) : null;
+  const label = isNum ? ("Room " + num)
+              : key.charAt(0).toUpperCase() + key.slice(1);
+
+  document.getElementById('roomTitle').textContent = label;
+  document.getElementById('capRoom').textContent = label;
+  document.getElementById('capText').textContent =
+      (isNum && ROOMS[num]) ? ROOMS[num].note : "";
+
+  const url = pageURL(key);
+  document.getElementById('openOriginal').href = url;
+  const imgEl = document.getElementById('roomImg');
+  const ph = document.getElementById('imgPlaceholder');
+  const custom = (isNum && ROOMS[num] && ROOMS[num].img) ? ROOMS[num].img : null;
+  const original = imageURL(key);
+  const src = custom || original;
+  imgEl.alt = label + " illustration";
+
+  // Show the image; if it fails, reveal a clear placeholder rather than blanking out.
+  imgEl.style.display = 'block';
+  ph.style.display = 'none';
+  imgEl.onload = () => { imgEl.style.display = 'block'; ph.style.display = 'none'; };
+  imgEl.onerror = () => {
+    imgEl.style.display = 'none';
+    ph.style.display = 'flex';
+    ph.innerHTML = 'Image didn\u2019t load.<br><a href="' + src + '" target="_blank" rel="noopener">Open it directly \u2197</a>';
+  };
+  imgEl.src = src;
+
+  // doors
+  const doorsEl = document.getElementById('doors');
+  doorsEl.innerHTML = '';
+  const doors = (isNum && ROOMS[num]) ? ROOMS[num].doors : [];
+  if (doors.length === 0){
+    document.getElementById('doorHint').textContent = '';
+  } else {
+    let filled = 0;
+    doors.forEach((d, idx) => {
+      const cell = document.createElement(d == null ? 'div' : 'a');
+      cell.className = 'door' + (d == null ? ' empty' : '');
+      if (d != null){ cell.setAttribute('data-nav', String(d)); filled++; }
+      cell.innerHTML =
+        '<span class="door-icon">⌖</span>' +
+        '<span class="door-num">' + (d == null ? '?' : d) + '</span>' +
+        '<span class="door-label">' + (d == null ? 'door ' + (idx+1) : 'to page ' + d) + '</span>';
+      doorsEl.appendChild(cell);
+    });
+    document.getElementById('doorHint').textContent =
+      filled + ' / ' + doors.length + ' doors set';
+  }
+
+  // prev / next (numeric rooms only)
+  const prev = document.getElementById('prevRoom');
+  const next = document.getElementById('nextRoom');
+  if (isNum){
+    prev.style.visibility = num > 1 ? 'visible' : 'hidden';
+    next.style.visibility = num < 45 ? 'visible' : 'hidden';
+    prev.onclick = () => navigate(num - 1);
+    next.onclick = () => navigate(num + 1);
+  } else {
+    prev.style.visibility = 'hidden';
+    next.style.visibility = 'hidden';
+  }
+}
+
+function navigate(key){
+  key = String(key);
+  if (key === '' || key === 'home'){ show('home'); return; }
+  show('room');
+  renderRoom(key);
+}
+
+/* ---------- build home grid ---------- */
+(function buildGrid(){
+  const grid = document.getElementById('roomGrid');
+  for (let i = 1; i <= 45; i++){
+    const a = document.createElement('a');
+    a.className = 'tile';
+    a.setAttribute('data-nav', String(i));
+    a.textContent = i;
+    if (i === 1 || i === 45) a.setAttribute('data-special','');
+    grid.appendChild(a);
+  }
+})();
+
+/* ---------- single click delegator: no hash, no popups ---------- */
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-nav]');
+  if (!t) return;
+  e.preventDefault();
+  navigate(t.getAttribute('data-nav'));
+});
+
+navigate('home');
+</script>
+</body>
+</html>
