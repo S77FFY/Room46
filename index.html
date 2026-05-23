@@ -356,7 +356,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.0.6";
+const APP_VERSION = "1.0.8";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -376,21 +376,42 @@ const ROOMS = {};
 for (let i = 1; i <= 45; i++){
   ROOMS[i] = { doors: [null, null, null], note: "" };
 }
-// Your own redrawn images. When hosted on GitHub Pages alongside index.html,
-// relative filenames load directly (same domain — no sandbox/popup issues).
-// Any room without an `img` falls back to the original illustration.
-const GH = "";  // same folder as index.html
+// Your own redrawn images, hosted on GitHub Pages alongside index.html.
+// Filenames are IMG_XXXX.jpeg, mapped from page number via confirmed ranges:
+//   pages  1–5  -> IMG_4068–4072
+//   pages  6–14 -> IMG_4081–4089
+//   pages 15–28 -> IMG_4090–4103
+//   pages 29–45 -> IMG_4105–4121   (IMG_4104 is skipped — unrelated screenshot)
+// If a page's image is wrong, adjust its range here. Any page without a
+// computed file falls back to the original illustration.
+function imgForPage(n){
+  let file = null;
+  if (n >= 1  && n <= 5)  file = 4068 + (n - 1);
+  else if (n >= 6  && n <= 14) file = 4081 + (n - 6);
+  else if (n >= 15 && n <= 28) file = 4090 + (n - 15);
+  else if (n >= 29 && n <= 45) file = 4105 + (n - 29);
+  return file ? "IMG_" + file + ".jpeg" : null;
+}
+// Assign computed images to every room:
+for (let i = 1; i <= 45; i++){
+  const f = imgForPage(i);
+  if (f) ROOMS[i].img = f;
+}
 // Door numbers read from the room illustrations (the page numbers each door leads to):
 ROOMS[1].doors = [20, 26, 41, 21];          // STORY, FABLE, TALE, YARN
-ROOMS[1].img   = GH + "IMG_4068.jpeg";
 ROOMS[2].doors = [29, 22, 12];
-ROOMS[2].img   = GH + "IMG_4069.jpeg";
 ROOMS[3].doors = [33, 9, 18];               // mirror-reversed room; centre door "NINE" = 9
-ROOMS[3].img   = GH + "IMG_4070.jpeg";
 ROOMS[4].doors = [44, 29, 15, 11, 16, 24, 43];
-ROOMS[4].img   = GH + "IMG_4071.jpeg";
 ROOMS[5].doors = [43, 22, 30, 20];
-ROOMS[5].img   = GH + "IMG_4072.jpeg";
+ROOMS[6].doors = [40];
+ROOMS[7].doors = [33, 36, 16];
+ROOMS[8].doors = [31, 6, 29, 12, 5];
+ROOMS[9].doors = [3, 18];
+ROOMS[10].doors = [34, 41, 14];
+ROOMS[11].doors = [40, 24];
+ROOMS[12].doors = [2, 21, 8, 39];           // 39 = ladder/trapdoor down
+ROOMS[13].doors = [27, 18, 25];
+ROOMS[14].doors = [10, 43, 24];
 
 /* ---------- routing ---------- */
 const home = document.getElementById('home');
