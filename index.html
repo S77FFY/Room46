@@ -260,6 +260,12 @@
     padding:9px 14px;text-decoration:none;cursor:pointer;
   }
   .room-nav a:hover,.room-nav button:hover{border-color:var(--brass-bright);color:var(--brass-bright);}
+  .arrow-group{display:flex;gap:6px;}
+  .arrow-group button{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.2rem;line-height:1;font-weight:600;
+    padding:6px 14px;min-width:44px;
+  }
   .room-title{
     font-family:'Cormorant Garamond',serif;font-size:1.3rem;
     letter-spacing:.16em;color:var(--brass-bright);
@@ -308,7 +314,10 @@
     <div class="room-nav" style="margin-top:0;margin-bottom:16px;">
       <a data-nav="home">← Map</a>
       <span class="room-title" id="roomTitle">Room</span>
-      <button id="prevRoom">Prev</button>
+      <span class="arrow-group">
+        <button id="prevRoom" aria-label="Previous room">&lt;</button>
+        <button id="nextRoom" aria-label="Next room">&gt;</button>
+      </span>
     </div>
 
     <div class="phone">
@@ -336,7 +345,6 @@
     <div class="room-nav">
       <a data-nav="home">All Rooms</a>
       <span style="font-size:.72rem;letter-spacing:.12em;color:var(--brass);" id="doorHint"></span>
-      <button id="nextRoom">Next</button>
     </div>
   </main>
 
@@ -356,7 +364,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.0.8";
+const APP_VERSION = "1.0.9";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -412,6 +420,7 @@ ROOMS[11].doors = [40, 24];
 ROOMS[12].doors = [2, 21, 8, 39];           // 39 = ladder/trapdoor down
 ROOMS[13].doors = [27, 18, 25];
 ROOMS[14].doors = [10, 43, 24];
+ROOMS[26].doors = [30, 36, 38, 1];
 
 /* ---------- routing ---------- */
 const home = document.getElementById('home');
@@ -480,7 +489,7 @@ function renderRoom(key){
       cell.innerHTML =
         '<span class="door-icon">⌖</span>' +
         '<span class="door-num">' + (d == null ? '?' : d) + '</span>' +
-        '<span class="door-label">' + (d == null ? 'door ' + (idx+1) : 'to page ' + d) + '</span>';
+        '<span class="door-label">' + (d == null ? 'door ' + (idx+1) : 'page ' + d) + '</span>';
       doorsEl.appendChild(cell);
     });
     document.getElementById('doorHint').textContent =
