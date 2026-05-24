@@ -370,12 +370,12 @@
       <div id="imgPlaceholder" class="img-placeholder"></div>
     </div>
 
-    <div class="doors" id="doors"><!-- filled by JS --></div>
-
     <div class="caption">
       <div class="cap-room" id="capRoom">Room</div>
       <div class="cap-text" id="capText"></div>
     </div>
+
+    <div class="doors" id="doors"><!-- filled by JS --></div>
 
     <div class="room-nav">
       <a data-nav="home">All Rooms</a>
@@ -399,7 +399,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.2.4";
+const APP_VERSION = "1.2.6";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -537,6 +537,10 @@ const SPECIAL = {
   prologue: {
     note: `The Maze.\nI met them at the gate though I usually wait inside. Preoccupied with their own thoughts, impatient, like so many children, they didn't see who I really was. They never noticed my crown, my pain, the fire in my eyes.\nLike all the others they think the Maze was made for them; actually, it is the other way around. They think I am some poet who will lead them through the symbols and spaces of this Underworld. They think I will teach them lessons. They should call me Cerberus…. I am the lesson.\nThe monstrous walls rise up and run away as far as the human eye can see, circling and dividing. Which half is the Maze?\nEven I get lost. It changes–sometimes slowly, imperceptibly … sometimes suddenly. This House is not only made of stone and mortar, wood and paint; it is made of time and mystery, hope and fear. Construction never stops. I take some pride in my role as architect.\nThey think I will guide them to the center. Perhaps I will….\nThe sun was very hot.\nTogether we walked through the gate into…`,
     doors: [1]
+  },
+  directions: {
+    note: `Read the directions carefully before entering the Maze. When you are ready, proceed to the Prologue.`,
+    doors: ['prologue']
   }
 };
 
