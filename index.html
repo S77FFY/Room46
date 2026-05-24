@@ -9,8 +9,7 @@
      MAZE Navigator  —  version scheme in JS (APP_VERSION)
      A companion for Christopher Manson's MAZE (1985).
      All room art is hotlinked live from inventwithpython.com;
-     nothing from the book is copied into this file. The story text
-     stays on the original site, one tap away via "Read text".
+     nothing from the book is copied into this file.
      ============================================================ */
 
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Spectral:wght@300;400;600&display=swap');
@@ -179,21 +178,18 @@
   }
   .step-complete-icon{font-size:1.4rem;color:var(--brass-bright);}
 
-  /* --- the room illustration: fixed area, always same place --- */
+  /* --- the room illustration: fits the image, no fixed height --- */
   .embed-wrap{
     position:relative;
     width:100%;
-    height:58vh;min-height:380px;max-height:620px;
     background:#e8dfce;
     overflow:hidden;
-    display:flex;align-items:center;justify-content:center;
     border:1px solid var(--brass);
     border-radius:12px;
     box-shadow:0 12px 30px var(--shadow);
   }
   .room-illustration{
-    width:100%;height:100%;
-    object-fit:contain;
+    width:100%;height:auto;
     display:block;background:#e8dfce;
   }
   .img-placeholder{
@@ -203,20 +199,12 @@
     color:#5c4720;font-size:.9rem;line-height:1.5;background:#e8dfce;
   }
   .img-placeholder a{color:#7a5c1f;font-weight:600;}
-  .embed-toolbar{
-    position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:6px;
-  }
-  .embed-toolbar a{
-    font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
-    background:rgba(20,14,8,.78);color:var(--parchment);
-    padding:5px 9px;border-radius:6px;text-decoration:none;
-  }
 
   /* --- the door boxes (with a gap above) --- */
   .doors{
     display:grid;
     gap:8px;
-    margin-top:22px;
+    margin-top:10px;
     padding:11px 12px;
     background:linear-gradient(180deg,#2a2018,#1c150f);
     border:2px solid var(--brass);
@@ -268,7 +256,20 @@
     max-height:220px;
     overflow-y:auto;
   }
+  /* --- scrollable text box --- */
+  .caption{
+    background:var(--parchment-dim);
+    color:var(--ink);
+    margin-top:10px;
+    padding:12px 16px 14px;
+    font-size:.84rem;line-height:1.6;
+    border-radius:10px;
+    border:1px solid var(--brass);
+    max-height:180px;
+    overflow-y:auto;
+  }
   .caption p{margin:0 0 8px;}
+  .caption p:last-child{margin-bottom:0;}
     font-family:'Cormorant Garamond',serif;font-weight:600;
     letter-spacing:.2em;text-transform:uppercase;font-size:.72rem;
     color:#5c4720;margin-bottom:4px;
@@ -365,9 +366,6 @@
     </div>
 
     <div class="embed-wrap">
-      <div class="embed-toolbar">
-        <a id="openOriginal" target="_blank" rel="noopener">Read text ↗</a>
-      </div>
       <img id="roomImg" class="room-illustration" alt="Room illustration" loading="lazy">
       <div id="imgPlaceholder" class="img-placeholder"></div>
     </div>
@@ -401,7 +399,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.1.8";
+const APP_VERSION = "1.1.9";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -530,8 +528,6 @@ function renderRoom(key){
     capEl.innerHTML = '<p style="font-style:italic;color:#6b5a3e;">No text yet for this room.</p>';
   }
 
-  const wikidotUrl = isNum ? 'https://mazecast.wikidot.com/room-' + num : pageURL(key);
-  document.getElementById('openOriginal').href = wikidotUrl;
   const imgEl = document.getElementById('roomImg');
   const ph = document.getElementById('imgPlaceholder');
   const custom = (isNum && ROOMS[num] && ROOMS[num].img) ? ROOMS[num].img : null;
