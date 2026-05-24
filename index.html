@@ -268,7 +268,7 @@
     max-height:220px;
     overflow-y:auto;
   }
-  .caption .cap-room{
+  .caption p{margin:0 0 8px;}
     font-family:'Cormorant Garamond',serif;font-weight:600;
     letter-spacing:.2em;text-transform:uppercase;font-size:.72rem;
     color:#5c4720;margin-bottom:4px;
@@ -401,7 +401,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.1.6";
+const APP_VERSION = "1.1.8";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -442,8 +442,10 @@ for (let i = 1; i <= 45; i++){
   const f = imgForPage(i);
   if (f) ROOMS[i].img = f;
 }
-// Door numbers read from the room illustrations (the page numbers each door leads to):
-ROOMS[1].doors = [20, 26, 41, 21];          // STORY, FABLE, TALE, YARN
+ROOMS[1].note = `…the entrance hall of the Maze.\nThey looked carefully at the bronze doors, trying to choose. The uncertainty of visitors is one of my little pleasures.\n"It's easy to get lost," I said helpfully. "This can be a sinister place." The sun glared at me through the gateway.\nSomething was ringing behind one of the doors. They spent some time trying to decide which door it was, not understanding that the silences of the Maze are as eloquent as the sounds.\n"Decisions, decisions," one said. "Too many decisions."\n"The story of my life," said another.\n"We don't want to be late," said a third, opening one of the doors.\n"Nary a soul to be seen," said the first, peering into the gloom.\nI waited patiently for them to choose which way to go … into…`;
+ROOMS[2].note = `…a bright room whose walls were in some disrepair. The floorboards creaked and groaned; the plaster made a gritty sound.\nThey studied the old frescoes for clues but missed the obvious signs.\n"Are we on the right path?" they asked.\nKeeping in mind what a relative term "right" is, I assured them they were, indeed, on the right path. As for the "correct" path or the "most appropriate" path…. Well, that might be something else.\nFull of confidence now they marched out to…`;
+ROOMS[3].note = `…an entirely different kind of place.\nThe group complained of feeling "all turned around," as well they might.\nBecause no one wanted to stay here very long they missed the real sign while looking through the obvious. People in their situation, confronted with a challenge, tend to accept the terms of the challenge as a given, without examining it from all sides. How many sides does that problem have? They don't know.\nWe passed down a long flight of stairs, through some sort of pantry, and on into…`;
+ROOMS[4].note = `…the great hall of many doors.\n"What a foolish face," I snorted. "Pay no attention."\nA sound made them all turn suddenly. A small black cat ran out of a door to my right, sniffed at us, and, before I could move, ran out of the hall. It was fortunate that I was still standing with the rest of them or they might have noticed.\nFaint voices came down one of the corridors.\n"Shall we toss a coin?" I asked. "Or have you made up your minds?"\nThey hadn't made up their minds, and they had no coins. By a process of elimination they decided to go to…`;
 ROOMS[2].doors = [29, 22, 12];
 ROOMS[3].doors = [33, 9, 18];               // mirror-reversed room; centre door "NINE" = 9
 ROOMS[4].doors = [44, 29, 15, 11, 16, 24, 43];
@@ -520,35 +522,12 @@ function renderRoom(key){
   document.getElementById('roomTitle').textContent = label;
   document.getElementById('capRoom').textContent = label;
 
-  // Fetch room text from mazecast.wikidot.com
+  // Display room text from embedded notes
   const capEl = document.getElementById('capText');
-  if (isNum){
-    capEl.textContent = 'Loading…';
-    fetch('https://mazecast.wikidot.com/room-' + num)
-      .then(r => {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.text();
-      })
-      .then(html => {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        // wikidot puts page content in #page-content
-        const content = doc.getElementById('page-content');
-        if (!content) throw new Error('no #page-content');
-        // Remove any wiki navigation elements inside it
-        content.querySelectorAll('.page-tags, .page-rate-widget-box, script, style').forEach(el => el.remove());
-        const text = content.textContent.trim().replace(/\s+/g, ' ');
-        capEl.textContent = text || (ROOMS[num].note || '');
-      })
-      .catch(() => {
-        // CORS block or network error — fall back to note or prompt
-        capEl.textContent = ROOMS[num] ? (ROOMS[num].note || '') : '';
-        if (!capEl.textContent){
-          capEl.innerHTML = '<a href="https://mazecast.wikidot.com/room-' + num +
-            '" target="_blank" rel="noopener" style="color:#7a5c1f">Read room text ↗</a>';
-        }
-      });
+  if (isNum && ROOMS[num] && ROOMS[num].note){
+    capEl.innerHTML = ROOMS[num].note.split('\n').map(l => `<p>${l}</p>`).join('');
   } else {
-    capEl.textContent = '';
+    capEl.innerHTML = '<p style="font-style:italic;color:#6b5a3e;">No text yet for this room.</p>';
   }
 
   const wikidotUrl = isNum ? 'https://mazecast.wikidot.com/room-' + num : pageURL(key);
