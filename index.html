@@ -262,9 +262,11 @@
     color:var(--ink);
     margin-top:14px;
     padding:12px 16px 14px;
-    font-size:.84rem;line-height:1.45;
+    font-size:.84rem;line-height:1.6;
     border-radius:10px;
     border:1px solid var(--brass);
+    max-height:220px;
+    overflow-y:auto;
   }
   .caption .cap-room{
     font-family:'Cormorant Garamond',serif;font-weight:600;
@@ -399,7 +401,7 @@
    - MAJOR reserved for manual major / release bumps
    Bump PATCH/MINOR here by hand as you revise the file.
    ========================================================= */
-const APP_VERSION = "1.1.5";
+const APP_VERSION = "1.1.6";
 
 document.getElementById('versionTag').textContent = "v" + APP_VERSION;
 document.getElementById('heroVersion').textContent = "Version " + APP_VERSION;
@@ -517,11 +519,40 @@ function renderRoom(key){
 
   document.getElementById('roomTitle').textContent = label;
   document.getElementById('capRoom').textContent = label;
-  document.getElementById('capText').textContent =
-      (isNum && ROOMS[num]) ? ROOMS[num].note : "";
 
-  const url = pageURL(key);
-  document.getElementById('openOriginal').href = url;
+  // Fetch room text from mazecast.wikidot.com
+  const capEl = document.getElementById('capText');
+  if (isNum){
+    capEl.textContent = 'Loading…';
+    fetch('https://mazecast.wikidot.com/room-' + num)
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        // wikidot puts page content in #page-content
+        const content = doc.getElementById('page-content');
+        if (!content) throw new Error('no #page-content');
+        // Remove any wiki navigation elements inside it
+        content.querySelectorAll('.page-tags, .page-rate-widget-box, script, style').forEach(el => el.remove());
+        const text = content.textContent.trim().replace(/\s+/g, ' ');
+        capEl.textContent = text || (ROOMS[num].note || '');
+      })
+      .catch(() => {
+        // CORS block or network error — fall back to note or prompt
+        capEl.textContent = ROOMS[num] ? (ROOMS[num].note || '') : '';
+        if (!capEl.textContent){
+          capEl.innerHTML = '<a href="https://mazecast.wikidot.com/room-' + num +
+            '" target="_blank" rel="noopener" style="color:#7a5c1f">Read room text ↗</a>';
+        }
+      });
+  } else {
+    capEl.textContent = '';
+  }
+
+  const wikidotUrl = isNum ? 'https://mazecast.wikidot.com/room-' + num : pageURL(key);
+  document.getElementById('openOriginal').href = wikidotUrl;
   const imgEl = document.getElementById('roomImg');
   const ph = document.getElementById('imgPlaceholder');
   const custom = (isNum && ROOMS[num] && ROOMS[num].img) ? ROOMS[num].img : null;
